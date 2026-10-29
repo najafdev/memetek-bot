@@ -1,5 +1,6 @@
 """Database session and engine management."""
 
+import os
 import logging
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
@@ -14,6 +15,14 @@ from memetek.database.models import Base
 
 logger = logging.getLogger(__name__)
 
+# Detect serverless (Vercel/Lambda) or Supabase pooler
+is_serverless = (
+    bool(os.getenv("VERCEL"))
+    or bool(os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    or settings.APP_ENV == "serverless"
+)
+is_supabase = "supabase" in settings.DATABASE_URL or ":6543" in settings.DATABASE_URL
+
 # Engine configuration
 engine_kwargs = {
     "echo": False,
@@ -24,10 +33,20 @@ if "sqlite" in settings.DATABASE_URL:
     # SQLite specific args
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
-    # PostgreSQL pool tuning
-    engine_kwargs["pool_size"] = 10
-    engine_kwargs["max_overflow"] = 20
-    engine_kwargs["pool_pre_ping"] = True
+    # Handle Supabase Transaction Pooler (PgBouncer) & Serverless (Vercel)
+    if is_serverless or is_supabase:
+        from sqlalchemy.pool import NullPool
+        engine_kwargs["poolclass"] = NullPool
+        # Required for Supabase PgBouncer pooler to avoid prepared statement collisions
+        engine_kwargs["connect_args"] = {
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        }
+    else:
+        # Standard persistent PostgreSQL pool
+        engine_kwargs["pool_size"] = 10
+        engine_kwargs["max_overflow"] = 20
+        engine_kwargs["pool_pre_ping"] = True
 
 engine: AsyncEngine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
