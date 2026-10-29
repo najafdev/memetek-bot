@@ -40,7 +40,6 @@ else:
         # Required for Supabase PgBouncer pooler to avoid prepared statement collisions
         engine_kwargs["connect_args"] = {
             "statement_cache_size": 0,
-            "prepared_statement_cache_size": 0,
         }
     else:
         # Standard persistent PostgreSQL pool
