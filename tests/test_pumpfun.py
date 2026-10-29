@@ -102,3 +102,30 @@ async def test_simulate_buy_handler(mock_bot):
     assert "@slingoor" in called_text
     assert "@The__Solstice" in called_text
     assert "@crackthecode" in called_text
+
+
+def test_whale_buy_webhook_endpoint():
+    """Test POST /api/whale-buy invokes broadcast and returns success."""
+    from unittest.mock import patch, AsyncMock
+    from fastapi.testclient import TestClient
+    from memetek.web.app import create_app
+
+    app = create_app()
+    with patch("memetek.services.pumpfun.PumpFunWhaleService.broadcast_buy_alert", new=AsyncMock(return_value=True)):
+        with TestClient(app) as test_client:
+            resp = test_client.post(
+                "/api/whale-buy",
+                json={
+                    "token_symbol": "MEMETEK",
+                    "sol_amount": 7.5,
+                    "buyer": "@slingoor",
+                    "chat_id": 1122866063,
+                },
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["success"] is True
+            assert data["token"] == "MEMETEK"
+            assert "@slingoor" in data["tagged_whales"]
+
+

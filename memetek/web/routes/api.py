@@ -178,9 +178,8 @@ async def trigger_whale_buy_webhook(
             target_chat_ids.append(payload.chat_id)
         else:
             # Broadcast to active community chats
-            stmt = select(Chat.id).where(
+            stmt = select(Chat.chat_id).where(
                 Chat.is_active.is_(True),
-                Chat.type.in_(["group", "supergroup"]),
             )
             result = await session.execute(stmt)
             target_chat_ids = [row[0] for row in result.all()]
