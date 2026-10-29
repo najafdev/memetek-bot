@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from memetek.config import settings, BRAND_NAME
 from memetek.services.market import market_service
+from memetek.services.pumpfun import pumpfun_service
+from memetek.bot.filters.admin import is_user_chat_admin
 from memetek.database.crud import (
     get_or_create_chat,
     get_user_watchlist,
@@ -156,3 +158,82 @@ async def handle_token_info(message: Message, session: AsyncSession):
         )
 
     await message.answer(reply)
+
+
+@router.message(Command("whales", "whale"))
+async def handle_whales_info(message: Message):
+    """Display tracked Pump.fun alpha whales and tracker status."""
+    whales_list = "\n".join([f"  • <b>{w}</b>" for w in pumpfun_service.tracked_whales])
+    text = (
+        f"🐋 <b>PUMP.FUN WHALE TRACKER</b> 💊\n\n"
+        f"The MEMETEK buy bot monitors on-chain Pump.fun buys and tags key alpha degens:\n\n"
+        f"<b>Currently Tracked Whales:</b>\n"
+        f"{whales_list}\n\n"
+        f"🔔 <i>Whenever a tracked buy occurs, the bot broadcasts an alert here with token details, "
+        f"green buy volume bars, and tags!</i>\n\n"
+        f"💡 <i>Admins can test the alert using:</i> <code>/simulatebuy [SOL amount]</code>"
+    )
+    await message.answer(text, disable_web_page_preview=True)
+
+
+@router.message(Command("simulatebuy", "testbuy"))
+async def handle_simulate_buy(message: Message):
+    """Admin command to simulate a live Pump.fun whale buy alert."""
+    user = message.from_user
+    if not user:
+        return
+
+    # Check permission
+    is_admin = await is_user_chat_admin(message.bot, message.chat.id, user.id)
+    if not is_admin:
+        await message.answer("⚠️ <i>Only chat administrators can trigger buy simulation tests.</i>")
+        return
+
+    # Check optional SOL amount in argument
+    parts = message.text.split() if message.text else []
+    sol_amount = 3.5
+    if len(parts) > 1:
+        try:
+            sol_amount = float(parts[1])
+        except ValueError:
+            pass
+
+    alert_text = pumpfun_service.format_buy_alert(
+        token_symbol="MEMETEK",
+        token_name="MEMETEK Token",
+        contract_address="8kG8M3M3T3KpumpFUNmoonCOINtokenCA123456789pump",
+        sol_amount=sol_amount,
+        usd_amount=sol_amount * 200.0,
+        tokens_bought=sol_amount * 5200000,
+        market_cap_usd=84200.0,
+        buyer_handle="@slingoor",
+        tx_hash="5xTestHashSolanaPumpfunTxPreview123456789",
+    )
+
+    await message.answer(alert_text, disable_web_page_preview=False)
+
+
+@router.message(Command("trackwhale"))
+async def handle_add_tracked_whale(message: Message):
+    """Add a new whale handle to track (Admins only)."""
+    user = message.from_user
+    if not user:
+        return
+
+    is_admin = await is_user_chat_admin(message.bot, message.chat.id, user.id)
+    if not is_admin:
+        await message.answer("⚠️ <i>Only chat administrators can modify the whale watch list.</i>")
+        return
+
+    parts = message.text.split() if message.text else []
+    if len(parts) < 2:
+        await message.answer("ℹ️ <b>Usage:</b> <code>/trackwhale @username</code>")
+        return
+
+    handle = parts[1].strip()
+    added = pumpfun_service.add_whale(handle)
+    if added:
+        await message.answer(f"✅ Added <b>{handle}</b> to the Pump.fun whale watch list! 🐋")
+    else:
+        await message.answer(f"ℹ️ <b>{handle}</b> is already in the whale watch list.")
+
