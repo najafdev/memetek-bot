@@ -38,18 +38,24 @@ This guide walks you through deploying **MEMETEK** for **100% free** using **Ver
    - **Region:** Choose a region close to you or US East.
 4. Click **"Create new project"** (takes ~1 minute to provision).
 
+### Your Supabase Project Information
+- **Project Reference:** `ehgyfquubiububzqqoqd`
+- **Project URL:** `https://ehgyfquubiububzqqoqd.supabase.co`
+- **Database Settings Direct Link:** [https://supabase.com/dashboard/project/ehgyfquubiububzqqoqd/settings/database](https://supabase.com/dashboard/project/ehgyfquubiububzqqoqd/settings/database)
+
 ### Get the Database Connection String:
-1. In your Supabase project dashboard, go to:
-   **Project Settings** (gear icon at the bottom left) → **Database**.
-2. Scroll down to the **"Connection string"** section and select the **"URI"** tab.
-3. Switch the mode to **"Transaction pooler"** (Port `6543`) or **"Session"** (Port `5432`):
+1. In your Supabase dashboard, navigate to:
+   [**Project Settings → Database**](https://supabase.com/dashboard/project/ehgyfquubiububzqqoqd/settings/database).
+2. Scroll to **"Connection string"** and select the **"URI"** tab.
+3. Select **Mode:** **Transaction** (Port `6543`):
    ```
-   postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+   postgresql://postgres.ehgyfquubiububzqqoqd:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
    ```
-4. Replace `[YOUR-PASSWORD]` with the database password you chose in step 3.
+4. Replace `[YOUR-PASSWORD]` with the database password you chose when creating the project.
 
 > [!NOTE]
-> MEMETEK includes a built-in normalizer that automatically translates `postgresql://` to `postgresql+asyncpg://` and configures `NullPool` with `statement_cache_size=0` for Supabase's transaction pooler. You can paste the URI directly from Supabase!
+> All 12 tables and initial seed data (allowed domains & approved memes) have already been created and verified in this Supabase database.
+> MEMETEK includes a built-in normalizer that automatically translates `postgresql://` to `postgresql+asyncpg://` and configures `NullPool` with `statement_cache_size=0` for Supabase's transaction pooler. You can paste the URI directly from Supabase into Vercel!
 
 ---
 
