@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MEMETEK Admin Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2220%22>🐱</text></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">🐱🪙</div>
+        <div class="brand-text">
+          <h1>MEMETEK</h1>
+          <p>Admin Mission Control</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="/" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+          <span>📊</span> Overview
+        </a>
+        <a href="/moderation" class="nav-link {% if active_page == 'moderation' %}active{% endif %}">
+          <span>🛡️</span> Moderation & Bans
+        </a>
+        <a href="/memes" class="nav-link {% if active_page == 'memes' %}active{% endif %}">
+          <span>🐸</span> Meme Approval Queue
+        </a>
+        <a href="/settings" class="nav-link {% if active_page == 'settings' %}active{% endif %}">
+          <span>⚙️</span> Community Settings
+        </a>
+        <a href="/logs" class="nav-link {% if active_page == 'logs' %}active{% endif %}">
+          <span>📜</span> Security Audit Logs
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>MEMETEK Bot v1.0.0</p>
+        <p style="color: var(--accent-green); margin-top: 4px;">● Shields Online</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <header class="header">
+        <div class="header-title">
+          <h2>{% block header_title %}Dashboard{% endblock %}</h2>
+        </div>
+        <div class="header-user">
+          <span style="font-size: 13px; color: var(--text-muted);">Admin: <b style="color: var(--accent-gold);">{{ admin_username }}</b></span>
+          <a href="/logout" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Logout 🚪</a>
+        </div>
+      </header>
+
+      <section class="content-body">
+        {% block content %}{% endblock %}
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,82 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 1. MEMETEK Bot & Dashboard Service
+  # ---------------------------------------------------------------------------
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memetek-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-memetek_user}:${POSTGRES_PASSWORD:-memetek_secure_pass}@postgres:5432/${POSTGRES_DB:-memetek_db}
+      - REDIS_URL=redis://redis:6379/0
+      - DASHBOARD_HOST=0.0.0.0
+      - DASHBOARD_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - memetek-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # 2. PostgreSQL Persistent Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: memetek-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-memetek_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-memetek_secure_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-memetek_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - memetek-network
+    # Notice: Ports are NOT bound to host for security; internal network only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-memetek_user} -d ${POSTGRES_DB:-memetek_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 3. Redis Cache & Flood Rate Limiter
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: memetek-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - memetek-network
+    # Internal network only; not exposed publicly
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  memetek-network:
+    driver: bridge

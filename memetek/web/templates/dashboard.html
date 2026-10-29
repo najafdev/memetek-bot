@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}MEMETEK — Overview{% endblock %}
+{% block header_title %}Community Overview & Bot Status{% endblock %}
+
+{% block content %}
+<!-- Metrics Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Tracked Members</span>
+      <span>👥</span>
+    </div>
+    <div class="stat-value">{{ stats.tracked_members }}</div>
+    <div class="stat-desc">● Privacy-compliant tracking</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Messages Tracked</span>
+      <span>💬</span>
+    </div>
+    <div class="stat-value">{{ stats.total_messages }}</div>
+    <div class="stat-desc">● Community engagement volume</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Approved Memes</span>
+      <span>🐸</span>
+    </div>
+    <div class="stat-value">{{ stats.approved_memes }}</div>
+    <div class="stat-desc">● Live in /meme command</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Active Warnings</span>
+      <span>⚠️</span>
+    </div>
+    <div class="stat-value" style="color: var(--accent-red);">{{ stats.active_warnings }}</div>
+    <div class="stat-desc">● Enforcing community standards</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Moderation Actions</span>
+      <span>🛡️</span>
+    </div>
+    <div class="stat-value" style="color: var(--accent-cyan);">{{ stats.moderation_actions }}</div>
+    <div class="stat-desc">● Automated + manual logs</div>
+  </div>
+</div>
+
+<!-- Deployment & System Health -->
+<div class="card">
+  <div class="card-title">
+    <span>System Deployment & Subsystem Health</span>
+    <span class="badge badge-green">Operational</span>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+    <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-sm);">
+      <div style="font-size: 12px; color: var(--text-muted);">Database Engine</div>
+      <div style="font-size: 15px; font-weight: 700; color: var(--accent-green); margin-top: 4px;">{{ db_status }}</div>
+    </div>
+    <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-sm);">
+      <div style="font-size: 12px; color: var(--text-muted);">Cache Driver</div>
+      <div style="font-size: 15px; font-weight: 700; color: var(--accent-gold); margin-top: 4px;">{{ cache_backend }}</div>
+    </div>
+    <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-sm);">
+      <div style="font-size: 12px; color: var(--text-muted);">Market Data API</div>
+      <div style="font-size: 15px; font-weight: 700; color: var(--accent-cyan); margin-top: 4px;">CoinGecko Public API</div>
+    </div>
+    <div style="background-color: var(--bg-card); padding: 16px; border-radius: var(--radius-sm);">
+      <div style="font-size: 12px; color: var(--text-muted);">Anti-Spam Shield</div>
+      <div style="font-size: 15px; font-weight: 700; color: var(--accent-green); margin-top: 4px;">Active & Enforcing</div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Moderation Activity -->
+<div class="card">
+  <div class="card-title">
+    <span>Recent Moderation Events</span>
+    <a href="/moderation" class="btn btn-secondary" style="font-size: 12px; padding: 4px 10px;">View All ➡️</a>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Time (UTC)</th>
+          <th>Chat ID</th>
+          <th>Target User</th>
+          <th>Action Type</th>
+          <th>Moderator</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_actions %}
+          {% for action in recent_actions %}
+          <tr>
+            <td><code>{{ action.created_at.strftime('%Y-%m-%d %H:%M') }}</code></td>
+            <td><code>{{ action.chat_id }}</code></td>
+            <td><code>{{ action.target_user_id }}</code></td>
+            <td>
+              {% if 'warn' in action.action_type %}
+                <span class="badge badge-gold">{{ action.action_type }}</span>
+              {% elif 'ban' in action.action_type or 'kick' in action.action_type %}
+                <span class="badge badge-red">{{ action.action_type }}</span>
+              {% elif 'mute' in action.action_type %}
+                <span class="badge badge-cyan">{{ action.action_type }}</span>
+              {% else %}
+                <span class="badge badge-green">{{ action.action_type }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if action.is_automated %}
+                <span class="badge badge-cyan">🤖 Automated</span>
+              {% else %}
+                <code>{{ action.moderator_user_id or 'Admin' }}</code>
+              {% endif %}
+            </td>
+            <td><i>{{ action.reason or 'N/A' }}</i></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No moderation events recorded yet. The chat is peaceful! 🕊️
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}MEMETEK — Meme Approval Queue{% endblock %}
+{% block header_title %}Meme Approval Queue & Vault{% endblock %}
+
+{% block content %}
+{% if success_msg %}
+<div class="alert alert-success">{{ success_msg }}</div>
+{% endif %}
+
+<!-- Pending Approval Queue -->
+<div class="card">
+  <div class="card-title">
+    <span>Pending Submissions Awaiting Review ({{ pending_memes|length }})</span>
+    <span class="badge badge-gold">Approval Required</span>
+  </div>
+
+  {% if pending_memes %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      {% for meme in pending_memes %}
+      <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            <span>Meme #{{ meme.id }}</span>
+            <span>Submitter: <code>{{ meme.submitter_user_id or 'Anonymous' }}</code></span>
+          </div>
+          <div style="font-size: 15px; margin-bottom: 16px; font-weight: 500;">
+            {{ meme.caption }}
+          </div>
+          {% if meme.media_type != 'text' %}
+          <div style="font-size: 12px; color: var(--accent-cyan); margin-bottom: 12px;">
+            Media Attachment: {{ meme.media_type }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+          <form method="POST" action="/memes/{{ meme.id }}/review" style="flex: 1;">
+            <input type="hidden" name="decision" value="approve">
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+              Approve 🚀
+            </button>
+          </form>
+          <form method="POST" action="/memes/{{ meme.id }}/review" style="flex: 1;">
+            <input type="hidden" name="decision" value="reject">
+            <button type="submit" class="btn btn-danger" style="width: 100%;">
+              Reject ❌
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; color: var(--text-muted); padding: 32px;">
+      No pending meme submissions in queue! Community can submit with <code>/submitmeme</code>. 🐸
+    </div>
+  {% endif %}
+</div>
+
+<!-- Approved Memes Vault -->
+<div class="card">
+  <div class="card-title">
+    <span>Approved Memes Vault ({{ approved_memes|length }})</span>
+    <span class="badge badge-green">Live in Bot</span>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Caption / Text</th>
+          <th>Type</th>
+          <th>Upvotes</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if approved_memes %}
+          {% for meme in approved_memes %}
+          <tr>
+            <td>#{{ meme.id }}</td>
+            <td style="max-width: 400px;">{{ meme.caption }}</td>
+            <td><span class="badge badge-cyan">{{ meme.media_type }}</span></td>
+            <td><b style="color: var(--accent-gold);">⭐ {{ meme.upvotes }}</b></td>
+            <td><code>{{ meme.created_at.strftime('%Y-%m-%d') }}</code></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No approved memes in vault yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

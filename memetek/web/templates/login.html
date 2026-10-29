@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMETEK Admin Login</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2220%22>🐱</text></svg>">
+</head>
+<body class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <div style="font-size: 48px;">🐱🪙</div>
+      <h2>MEMETEK</h2>
+      <p>Where Memes Meet the Moon 🚀</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/login">
+      <div class="form-group">
+        <label class="form-label">Admin Username</label>
+        <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Secret Password</label>
+        <input type="password" name="password" class="form-control" placeholder="••••••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 10px;">
+        Authorize Mission Control 🔑
+      </button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}MEMETEK — Community Settings{% endblock %}
+{% block header_title %}Community & Anti-Spam Configuration{% endblock %}
+
+{% block content %}
+{% if success_msg %}
+<div class="alert alert-success">{{ success_msg }}</div>
+{% endif %}
+{% if error_msg %}
+<div class="alert alert-danger">{{ error_msg }}</div>
+{% endif %}
+
+<form method="POST" action="/settings">
+  <!-- General Chat Identification -->
+  <div class="card">
+    <div class="card-title">Select Telegram Group</div>
+    <div class="form-group">
+      <label class="form-label">Telegram Group Chat ID</label>
+      <input type="text" name="chat_id" class="form-control" value="{{ chat.chat_id if chat else '' }}" placeholder="-100123456789" required>
+      <div class="form-help">The numeric ID of your Telegram community group. (Use /id in the group to find it).</div>
+    </div>
+  </div>
+
+  <!-- Anti-Spam Controls -->
+  <div class="card">
+    <div class="card-title">Automated Moderation & Shields</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+      <div class="form-group">
+        <label class="form-label">Anti-Spam Shield</label>
+        <select name="anti_spam_enabled" class="form-control">
+          <option value="true" {% if not chat or chat.anti_spam_enabled %}selected{% endif %}>🟢 Enabled (Recommended)</option>
+          <option value="false" {% if chat and not chat.anti_spam_enabled %}selected{% endif %}>🔴 Disabled</option>
+        </select>
+        <div class="form-help">Scans for message floods, copy-paste spam, phishing URLs, and prohibited files.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Welcome System</label>
+        <select name="welcome_enabled" class="form-control">
+          <option value="true" {% if not chat or chat.welcome_enabled %}selected{% endif %}>🟢 Enabled</option>
+          <option value="false" {% if chat and not chat.welcome_enabled %}selected{% endif %}>🔴 Disabled</option>
+        </select>
+        <div class="form-help">Greets new members automatically when joining.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Welcome Message Auto-Delete (Seconds)</label>
+        <input type="number" name="welcome_delete_seconds" class="form-control" value="{{ chat.welcome_delete_seconds if chat else 120 }}" min="0" max="86400">
+        <div class="form-help">Deletes welcome messages after N seconds to avoid chat clutter (0 = never delete).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Official Token Contract Address (CA) -->
+  <div class="card">
+    <div class="card-title">Official MEMETEK Token Information</div>
+    <div class="form-group">
+      <label class="form-label">Verified Contract Address (CA)</label>
+      <input type="text" name="official_contract_address" class="form-control" value="{{ chat.official_contract_address if chat and chat.official_contract_address else '' }}" placeholder="e.g. 0x... or Solana Mint Address">
+      <div class="form-help">Leave empty if the token is not launched yet. Displayed when users ask for <code>/token</code> or <code>/ca</code>.</div>
+    </div>
+  </div>
+
+  <!-- Welcome Message Template Editor -->
+  <div class="card">
+    <div class="card-title">Welcome Message Template</div>
+    <div class="form-group">
+      <label class="form-label">Welcome HTML Text</label>
+      <textarea name="welcome_text" class="form-control" style="min-height: 180px;">{{ chat.welcome_text if chat and chat.welcome_text else default_welcome }}</textarea>
+      <div class="form-help">
+        Available dynamic variables: <code>{name}</code> (safe mention), <code>{username}</code>, <code>{chat_title}</code>.<br>
+        Standard Telegram HTML tags supported: &lt;b&gt;, &lt;i&gt;, &lt;code&gt;.
+      </div>
+    </div>
+  </div>
+
+  <!-- Community Rules Editor -->
+  <div class="card">
+    <div class="card-title">Community Rules Editor</div>
+    <div class="form-group">
+      <label class="form-label">Rules HTML Text</label>
+      <textarea name="rules_text" class="form-control" style="min-height: 180px;">{{ chat.rules_text if chat and chat.rules_text else default_rules }}</textarea>
+      <div class="form-help">Displayed to members when calling <code>/rules</code> in the group.</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 40px;">
+    <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 15px;">
+      Save Settings & Sync Bot 💾
+    </button>
+  </div>
+</form>
+
+<!-- Domain Allowlist Management -->
+<div class="card">
+  <div class="card-title">Trusted Domain Allowlist</div>
+  <form method="POST" action="/settings/domains/add" style="display: flex; gap: 12px; margin-bottom: 20px;">
+    <input type="text" name="domain" class="form-control" placeholder="e.g. myofficialproject.io" required style="max-width: 320px;">
+    <button type="submit" class="btn btn-secondary">Add Allowed Domain ➕</button>
+  </form>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Allowed Domain</th>
+          <th>Scope</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if domains %}
+          {% for d in domains %}
+          <tr>
+            <td><code>{{ d }}</code></td>
+            <td><span class="badge badge-green">Trusted</span></td>
+            <td>
+              <form method="POST" action="/settings/domains/remove">
+                <input type="hidden" name="domain" value="{{ d }}">
+                <button type="submit" class="btn btn-danger" style="padding: 4px 10px; font-size: 11px;">Remove 🗑️</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 16px;">
+              No custom domains added. Default crypto platforms are permitted.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

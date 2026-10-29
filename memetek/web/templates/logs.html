@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}MEMETEK — Security Audit Logs{% endblock %}
+{% block header_title %}Administrator Security Audit Trail{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-title">
+    <span>Audit Event History</span>
+    <span class="badge badge-cyan">Append-Only Log</span>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Timestamp (UTC)</th>
+          <th>Actor / Admin</th>
+          <th>Action</th>
+          <th>Details</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if events %}
+          {% for ev in events %}
+          <tr>
+            <td>#{{ ev.id }}</td>
+            <td><code>{{ ev.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</code></td>
+            <td><code>{{ ev.admin_user_id }}</code></td>
+            <td><span class="badge badge-gold">{{ ev.action }}</span></td>
+            <td>{{ ev.details }}</td>
+            <td><code>{{ ev.ip_address or 'Internal' }}</code></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No audit logs recorded yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

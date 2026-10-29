@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}MEMETEK — Moderation Queue & History{% endblock %}
+{% block header_title %}Moderation Queue & Safety Actions{% endblock %}
+
+{% block content %}
+{% if success_msg %}
+<div class="alert alert-success">{{ success_msg }}</div>
+{% endif %}
+{% if error_msg %}
+<div class="alert alert-danger">{{ error_msg }}</div>
+{% endif %}
+
+<!-- Quick Mod Action Form -->
+<div class="card">
+  <div class="card-title">Manage User Warnings</div>
+  <form method="POST" action="/moderation/clearwarns" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+      <label class="form-label">Telegram Chat ID</label>
+      <input type="text" name="chat_id" class="form-control" placeholder="-100123456789" required>
+    </div>
+    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+      <label class="form-label">Target User ID</label>
+      <input type="text" name="user_id" class="form-control" placeholder="123456789" required>
+    </div>
+    <button type="submit" class="btn btn-secondary">
+      Clear Active Warnings 🧹
+    </button>
+  </form>
+</div>
+
+<!-- Moderation Actions Table -->
+<div class="card">
+  <div class="card-title">All Logged Moderation Actions</div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Timestamp (UTC)</th>
+          <th>Chat ID</th>
+          <th>Target User ID</th>
+          <th>Action</th>
+          <th>Initiator</th>
+          <th>Duration</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if actions %}
+          {% for action in actions %}
+          <tr>
+            <td>#{{ action.id }}</td>
+            <td><code>{{ action.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</code></td>
+            <td><code>{{ action.chat_id }}</code></td>
+            <td><code>{{ action.target_user_id }}</code></td>
+            <td>
+              {% if 'ban' in action.action_type or 'kick' in action.action_type %}
+                <span class="badge badge-red">{{ action.action_type }}</span>
+              {% elif 'mute' in action.action_type %}
+                <span class="badge badge-cyan">{{ action.action_type }}</span>
+              {% elif 'warn' in action.action_type %}
+                <span class="badge badge-gold">{{ action.action_type }}</span>
+              {% else %}
+                <span class="badge badge-green">{{ action.action_type }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if action.is_automated %}
+                <span class="badge badge-cyan">🤖 Bot Shield</span>
+              {% else %}
+                <code>{{ action.moderator_user_id or 'Admin' }}</code>
+              {% endif %}
+            </td>
+            <td>{{ (action.duration_seconds // 60) if action.duration_seconds else '—' }}{% if action.duration_seconds %}m{% endif %}</td>
+            <td><i>{{ action.reason or 'No reason provided' }}</i></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No moderation records found.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
