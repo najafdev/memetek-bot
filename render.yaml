@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: memetek-bot
+    runtime: python
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: APP_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_USER_IDS
+        value: "1122866063"
+      - key: WEBHOOK_SECRET
+        value: "memetek_secret_key_2026_xyz"
+      - key: DASHBOARD_USERNAME
+        value: "admin"
+      - key: DASHBOARD_PASSWORD
+        value: "AdminDegenPassword2026!"
+      - key: DASHBOARD_SECRET_KEY
+        value: "memetek_super_secret_jwt_key_degens_moon_2026"
