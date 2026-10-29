@@ -63,11 +63,12 @@ class Settings(BaseSettings):
         if not v:
             v = os.getenv("POSTGRES_URL") or os.getenv("DATABASE_PUBLIC_URL") or "sqlite+aiosqlite:///./memetek.db"
 
-        # Safely handle special characters (like @ or :) in password if unencoded
+        # Safely handle special characters (like @ or :) in password if unencoded or encoded
         match = re.match(r"^(.*?://)([^:]+):(.*)@([^@]+:\d+/[^?]+.*)$", v)
         if match:
             prefix, user, raw_password, rest = match.groups()
-            encoded_password = urllib.parse.quote(raw_password, safe="")
+            clean_pw = urllib.parse.unquote(raw_password)
+            encoded_password = urllib.parse.quote(clean_pw, safe="")
             v = f"{prefix}{user}:{encoded_password}@{rest}"
 
         if v.startswith("postgres://"):

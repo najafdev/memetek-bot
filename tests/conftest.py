@@ -18,6 +18,7 @@ from memetek.config import settings
 # Force test mode
 settings.TEST_MODE = True
 settings.DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+settings.ADMIN_USER_IDS = "123456789,1122866063"
 
 test_engine = create_async_engine(
     settings.DATABASE_URL,
@@ -28,6 +29,11 @@ test_session_factory = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+# Redirect application database session to in-memory test engine
+import memetek.database.session as session_module
+session_module.engine = test_engine
+session_module.async_session_factory = test_session_factory
 
 
 @pytest.fixture(scope="session")

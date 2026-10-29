@@ -31,12 +31,15 @@ from memetek.web.auth import (
     COOKIE_NAME,
     get_current_admin_or_none,
 )
+from pathlib import Path
 from memetek.services.cache import cache
 
 logger = logging.getLogger(__name__)
 
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
 router = APIRouter(include_in_schema=False)
-templates = Jinja2Templates(directory="memetek/web/templates")
 
 
 # -----------------------------------------------------------------------------

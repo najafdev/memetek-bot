@@ -1,6 +1,7 @@
 """FastAPI application factory for MEMETEK Web Dashboard & API."""
 
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
@@ -16,23 +17,38 @@ from memetek.web.routes import pages, api
 
 logger = logging.getLogger(__name__)
 
+# Base directory for web assets
+WEB_DIR = Path(__file__).resolve().parent
+STATIC_DIR = WEB_DIR / "static"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown hooks."""
     logger.info("Starting MEMETEK Web Service...")
-    # Initialize DB schema
-    await init_db()
-    # Connect cache
-    await cache.connect()
-    # Seed data if needed
-    async with async_session_factory() as session:
-        await seed_initial_data_if_empty(session)
+    # Initialize DB schema only in non-serverless environments or test mode
+    # (Schema is pre-provisioned via migrations on Supabase in production)
+    try:
+        if settings.APP_ENV != "serverless" or settings.TEST_MODE:
+            await init_db()
+            async with async_session_factory() as session:
+                await seed_initial_data_if_empty(session)
+    except Exception as e:
+        logger.warning("Database schema check failed on startup (non-fatal): %s", e)
+
+    # Connect cache gracefully
+    try:
+        await cache.connect()
+    except Exception as e:
+        logger.warning("Cache connect failed on startup (non-fatal): %s", e)
 
     yield
 
     logger.info("Shutting down MEMETEK Web Service...")
-    await cache.close()
+    try:
+        await cache.close()
+    except Exception:
+        pass
 
 
 def create_app() -> FastAPI:
@@ -44,8 +60,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Static files
-    app.mount("/static", StaticFiles(directory="memetek/web/static"), name="static")
+    # Mount static files using resolved absolute path
+    if STATIC_DIR.exists():
+        app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     # Healthcheck directly at root /health
     @app.get("/health", tags=["Monitoring"], include_in_schema=True)
