@@ -57,8 +57,19 @@ class Settings(BaseSettings):
     def normalize_database_url(cls, v: str) -> str:
         """Normalize database connection string for Railway, Render, Supabase, and Heroku."""
         import os
+        import re
+        import urllib.parse
+
         if not v:
             v = os.getenv("POSTGRES_URL") or os.getenv("DATABASE_PUBLIC_URL") or "sqlite+aiosqlite:///./memetek.db"
+
+        # Safely handle special characters (like @ or :) in password if unencoded
+        match = re.match(r"^(.*?://)([^:]+):(.*)@([^@]+:\d+/[^?]+.*)$", v)
+        if match:
+            prefix, user, raw_password, rest = match.groups()
+            encoded_password = urllib.parse.quote(raw_password, safe="")
+            v = f"{prefix}{user}:{encoded_password}@{rest}"
+
         if v.startswith("postgres://"):
             return v.replace("postgres://", "postgresql+asyncpg://", 1)
         if v.startswith("postgresql://") and "+asyncpg" not in v:
